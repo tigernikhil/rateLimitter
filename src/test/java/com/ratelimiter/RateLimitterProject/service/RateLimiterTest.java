@@ -26,7 +26,7 @@ class RateLimiterTest {
     private RateLimitConfigConfiguration rateLimitConfigConfiguration;
 
     @InjectMocks
-    private RateLimiter rateLimiter;
+    private SlidingWindowCounters rateLimiter;
 
     @BeforeEach
     void setUp() {
@@ -34,7 +34,7 @@ class RateLimiterTest {
     }
 
     @Test
-    void testIncrementCounter() throws IOException {
+    void testallowRequest() throws IOException {
         ClientLimitConfig clientLimitConfig = new ClientLimitConfig();
         clientLimitConfig.setClientId("testClient");
         clientLimitConfig.setServiceLimit("testService", 10L);
@@ -43,7 +43,7 @@ class RateLimiterTest {
         Map<String, ClientLimitConfig> clientLimitConfigMap = Collections.singletonMap("testClient", clientLimitConfig);
         when(rateLimitConfigConfiguration.configuredRateLimit()).thenReturn(clientLimitConfigMap);
 
-        ResponseData responseData = rateLimiter.incrementCounter("testClient", "testService");
+        ResponseData responseData = rateLimiter.allowRequest("testClient", "testService");
 
         assertEquals("WrongInput", responseData.getMessage());
         assertEquals(0, responseData.getCounterValue());
@@ -53,7 +53,7 @@ class RateLimiterTest {
     }
 
     @Test
-    void testIncrementCounterByValue() throws IOException {
+    void testallowRequestByValue() throws IOException {
         ClientLimitConfig clientLimitConfig = new ClientLimitConfig();
         clientLimitConfig.setClientId("testClient");
         clientLimitConfig.setServiceLimit("testService", 10L);
@@ -62,7 +62,7 @@ class RateLimiterTest {
         Map<String, ClientLimitConfig> clientLimitConfigMap = Collections.singletonMap("testClient", clientLimitConfig);
         when(rateLimitConfigConfiguration.configuredRateLimit()).thenReturn(clientLimitConfigMap);
 
-        ResponseData responseData = rateLimiter.incrementCounterByValue("testClient", "testService", 3L);
+        ResponseData responseData = rateLimiter.allowRequestByValue("testClient", "testService", 3L);
 
         assertEquals("WrongInput", responseData.getMessage());
         assertEquals(0, responseData.getCounterValue());
@@ -72,17 +72,17 @@ class RateLimiterTest {
     }
 
     @Test
-    void testIncrementCounter_NoClientConfig() throws IOException {
+    void testallowRequest_NoClientConfig() throws IOException {
         when(rateLimitConfigConfiguration.configuredRateLimit()).thenReturn(Collections.emptyMap());
 
-        ResponseData responseData = rateLimiter.incrementCounter("nonExistentClient", "testService");
+        ResponseData responseData = rateLimiter.allowRequest("nonExistentClient", "testService");
 
         assertEquals("WrongInput", responseData.getMessage());
         assertEquals(false, responseData.getIsIncremented());
     }
 
     @Test
-    void testIncrementCounterByValue_NoServiceLimit() throws IOException {
+    void testallowRequestByValue_NoServiceLimit() throws IOException {
         ClientLimitConfig clientLimitConfig = new ClientLimitConfig();
         clientLimitConfig.setClientId("testClient");
         clientLimitConfig.setTimeWindow(5L);
@@ -90,7 +90,7 @@ class RateLimiterTest {
         Map<String, ClientLimitConfig> clientLimitConfigMap = Collections.singletonMap("testClient", clientLimitConfig);
         when(rateLimitConfigConfiguration.configuredRateLimit()).thenReturn(clientLimitConfigMap);
 
-        ResponseData responseData = rateLimiter.incrementCounterByValue("testClient", "nonExistentService", 3L);
+        ResponseData responseData = rateLimiter.allowRequestByValue("testClient", "nonExistentService", 3L);
 
         assertEquals("WrongInput", responseData.getMessage());
         assertEquals(false, responseData.getIsIncremented());

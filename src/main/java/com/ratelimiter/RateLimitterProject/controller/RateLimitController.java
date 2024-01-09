@@ -1,7 +1,8 @@
 package com.ratelimiter.RateLimitterProject.controller;
 
 import com.ratelimiter.RateLimitterProject.model.Response.ResponseData;
-import com.ratelimiter.RateLimitterProject.service.RateLimiter;
+import com.ratelimiter.RateLimitterProject.service.RateLimitterWrapper;
+import com.ratelimiter.RateLimitterProject.service.SlidingWindowCounters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,16 +14,18 @@ import com.ratelimiter.RateLimitterProject.model.Request.RequestData;
 @RestController
 public class RateLimitController {
 
-    private final RateLimiter rateLimiter;
+//    private final SlidingWindowCounters rateLimiter;
+    private RateLimitterWrapper rateLimiterWrapper;
 
     @Autowired
-    public RateLimitController(RateLimiter rateLimiter) {
-        this.rateLimiter = rateLimiter;
+    public RateLimitController(SlidingWindowCounters rateLimiter) {
+        //TODO this can be extended
+        rateLimiterWrapper = new RateLimitterWrapper(rateLimiter);
     }
 
-    @PostMapping("/incrementCounter")
-    public ResponseEntity<ResponseData> incrementCounter(@RequestBody RequestData requestData) {
-        ResponseData responseData = rateLimiter.incrementCounter(requestData.getClientId(), requestData.getWebService());
+    @PostMapping("/allowRequest")
+    public ResponseEntity<ResponseData> allowRequest(@RequestBody RequestData requestData) {
+        ResponseData responseData = rateLimiterWrapper.allowRequest(requestData.getClientId(), requestData.getWebService());
         if (responseData.getIsIncremented()) {
             return ResponseEntity.ok(responseData);
         } else {
@@ -30,9 +33,9 @@ public class RateLimitController {
         }
     }
 
-    @PostMapping("/incrementCounterByValue")
-    public ResponseEntity<ResponseData> incrementCounterByValue(@RequestBody RequestData requestData) {
-        ResponseData responseData = rateLimiter.incrementCounterByValue(requestData.getClientId(), requestData.getWebService(), requestData.getCounterValue());
+    @PostMapping("/allowRequestByValue")
+    public ResponseEntity<ResponseData> allowRequestByValue(@RequestBody RequestData requestData) {
+        ResponseData responseData = rateLimiterWrapper.allowRequestByValue(requestData.getClientId(), requestData.getWebService(), requestData.getCounterValue());
         if (responseData.getIsIncremented()) {
             return ResponseEntity.ok(responseData);
         } else {

@@ -15,15 +15,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
-public class RateLimiter {
-    private static final Logger LOGGER = Logger.getLogger(RateLimiter.class.getName());
+public class SlidingWindowCounters implements RateLimiterStrategy{
+    private static final Logger LOGGER = Logger.getLogger(SlidingWindowCounters.class.getName());
     private final Map<String, Map<String, Long>> requestCounts;
     private final Map<String, Map<String, Map<Long, Integer>>> requestsPerWindow; // New field
     private Map<String, ClientLimitConfig> clientLimitConfigMap;
 
 
     @Autowired
-    public RateLimiter(RateLimitFileIO rateLimitFileIO, RateLimitConfigConfiguration rateLimitConfigConfiguration) {
+    public SlidingWindowCounters(RateLimitConfigConfiguration rateLimitConfigConfiguration) {
         this.requestCounts = new ConcurrentHashMap<>();
         this.requestsPerWindow = new ConcurrentHashMap<>(); // Initialize requestsPerWindow
         this.clientLimitConfigMap = new ConcurrentHashMap<>();
@@ -35,7 +35,7 @@ public class RateLimiter {
         }
     }
 
-    public synchronized ResponseData incrementCounter(String clientId, String webService) {
+    public synchronized ResponseData allowRequest(String clientId, String webService) {
         try {
             ClientLimitConfig clientConfig = clientLimitConfigMap.get(clientId);
             if (clientConfig == null) {
@@ -80,7 +80,7 @@ public class RateLimiter {
             logInfo("Request accepted");
             //windowCounts.forEach((key, value) -> System.out.println("Bucket: " + key + ", Count: " + value));
             return ResponseData.builder().message("Success")
-                    .counterValue(currentCount)
+                    .counterValue(currentCount+1)
                     .clientId(clientId)
                     .rateLimit(rateLimit)
                     .webService(webService)
@@ -95,7 +95,7 @@ public class RateLimiter {
         }
     }
 
-    public synchronized ResponseData incrementCounterByValue(String clientId, String webService, long count) {
+    public synchronized ResponseData allowRequestByValue(String clientId, String webService, long count) {
         try {
             ClientLimitConfig clientConfig = clientLimitConfigMap.get(clientId);
             if (clientConfig == null) {
@@ -136,7 +136,7 @@ public class RateLimiter {
             logInfo("Incremented counter by value");
             //windowCounts.forEach((key, value) -> System.out.println("Bucket: " + key + ", Count: " + value));
             return ResponseData.builder().message("Success")
-                    .counterValue((int)newCount)
+                    .counterValue((int)newCount + 1)
                     .clientId(clientId)
                     .webService(webService)
                     .rateLimit(rateLimit)
