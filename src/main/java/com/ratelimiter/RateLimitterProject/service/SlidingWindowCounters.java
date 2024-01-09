@@ -21,14 +21,14 @@ public class SlidingWindowCounters implements RateLimiterStrategy{
     private final Map<String, Map<String, Map<Long, Integer>>> requestsPerWindow; // New field
     private Map<String, ClientLimitConfig> clientLimitConfigMap;
 
-    private final Map<Long, Integer> globalWindowCounts;
-    private final long globalTimeWindow = 60; // 60 seconds (adjust as needed)
-    private final long globalRateLimit = 10;
+//    private final Map<Long, Integer> globalWindowCounts;
+//    private final long globalTimeWindow = 60; // 60 seconds (adjust as needed)
+//    private final long globalRateLimit = 40;
 
 
     @Autowired
     public SlidingWindowCounters(RateLimitConfigConfiguration rateLimitConfigConfiguration) {
-        this.globalWindowCounts = new ConcurrentHashMap<>();
+//        this.globalWindowCounts = new ConcurrentHashMap<>();
         this.requestCounts = new ConcurrentHashMap<>();
         this.requestsPerWindow = new ConcurrentHashMap<>(); // Initialize requestsPerWindow
         this.clientLimitConfigMap = new ConcurrentHashMap<>();
@@ -64,17 +64,17 @@ public class SlidingWindowCounters implements RateLimiterStrategy{
                         .isIncremented(false).build();
             }
 
-            long currentGlobalBucket = System.currentTimeMillis() / 1000L;
-            int currentGlobalCount = globalWindowCounts.values().stream().mapToInt(Integer::intValue).sum();
-            cleanUpOldGlobalCounters(currentGlobalBucket);
-
-            if (currentGlobalCount >= globalRateLimit) {
-                logWarning("Global Request blocked due to rate limiting");
-                return ResponseData.builder()
-                        .message("GlobalRequestBlocked")
-                        .isIncremented(false)
-                        .build();
-            }
+//            long currentGlobalBucket = System.currentTimeMillis() / 1000L;
+//            int currentGlobalCount = globalWindowCounts.values().stream().mapToInt(Integer::intValue).sum();
+//            cleanUpOldGlobalCounters(currentGlobalBucket);
+//
+//            if (currentGlobalCount >= globalRateLimit) {
+//                logWarning("Global Request blocked due to rate limiting");
+//                return ResponseData.builder()
+//                        .message("GlobalRequestBlocked")
+//                        .isIncremented(false)
+//                        .build();
+//            }
 
 //            long timeWindow = clientConfig.getTimeWindow() * 1000;
             long currentTime = System.currentTimeMillis();
@@ -94,7 +94,7 @@ public class SlidingWindowCounters implements RateLimiterStrategy{
                         .build();
             }
             windowCounts.put(currentBucket, windowCounts.getOrDefault(currentBucket, 0) + 1);
-            globalWindowCounts.put(currentGlobalBucket, globalWindowCounts.getOrDefault(currentGlobalBucket, 0) + 1);
+//            globalWindowCounts.put(currentGlobalBucket, globalWindowCounts.getOrDefault(currentGlobalBucket, 0) + 1);
             logInfo("Request accepted");
             //windowCounts.forEach((key, value) -> System.out.println("Bucket: " + key + ", Count: " + value));
             return ResponseData.builder().message("Success")
@@ -169,9 +169,9 @@ public class SlidingWindowCounters implements RateLimiterStrategy{
         }
     }
 
-    private void cleanUpOldGlobalCounters(long currentBucket) {
-        globalWindowCounts.entrySet().removeIf(entry -> currentBucket - entry.getKey() > globalTimeWindow);
-    }
+//    private void cleanUpOldGlobalCounters(long currentBucket) {
+//        globalWindowCounts.entrySet().removeIf(entry -> currentBucket - entry.getKey() > globalTimeWindow);
+//    }
 
     private void cleanUpOldCounters(Map<Long, Integer> windowCounts, long currentBucket, long slidingWindowSize) {
         windowCounts.entrySet().removeIf(entry -> currentBucket - entry.getKey() > slidingWindowSize);
