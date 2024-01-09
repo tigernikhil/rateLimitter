@@ -1,0 +1,28 @@
+{
+  "clientLimits": [
+    {
+      "clientId": "client1",
+      "limits": {
+        "webServiceA": 20,
+        "webServiceB": 15
+      },
+      "timeWindow": 10
+    },
+    {
+      "clientId": "client2",
+      "limits": {
+        "webServiceA": 30,
+        "webServiceC": 25
+      },
+      "timeWindow": 45
+    },
+    {
+      "clientId": "client3",
+      "limits": {
+        "webServiceB": 25,
+        "webServiceD": 18
+      },
+      "timeWindow": 75
+    }
+  ]
+}
